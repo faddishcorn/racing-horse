@@ -1,18 +1,4 @@
-"use server"
-
-export async function analyzeHorse(horseData: {
-  hrName: string
-  age: string
-  sex: string
-  rcCntT: string
-  ord1CntT: string
-  winRateT: string
-  qnlRateT: string
-  recentOrd: string
-  recentRating: string
-  recentBudam: string
-  chaksunT: string
-}) {
+export async function analyzeHorse(horseData) {
   // 실제 분석하는 것처럼 약간의 지연 추가
   await new Promise((resolve) => setTimeout(resolve, 1500))
 
