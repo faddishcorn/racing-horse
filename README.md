@@ -1,6 +1,9 @@
 ## 이겨보자 - 더존비즈온 인턴십 과제 
 공공데이터를 활용한 경주마 탐색/상세/즐겨찾기/노트/댓글/AI 분석 기능을 제공하는 풀스택 프로젝트입니다.
 
+## 프로토타입 배포 주소
+https://racing-horse.vercel.app/
+
 ## 기술 스택
 
 - Frontend: React 18, Vite, styled-components, Axios
