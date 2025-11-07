@@ -5,6 +5,7 @@ import SearchSection from "./components/SearchSection"
 import HorseGrid from "./components/HorseGrid"
 import DetailModal from "./components/DetailModal"
 import FavoritesSection from "./components/FavoriteSection"
+import Pagination from "./components/Pagination"
 import { analyzeHorse } from "./utils/analysisService"
 
 const mockHorses = [
@@ -130,6 +131,8 @@ const Main = styled.main`
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [selectedHorse, setSelectedHorse] = useState(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentUser, setCurrentUser] = useState("")
@@ -156,13 +159,23 @@ export default function App() {
     }
   }, [])
 
+  // 검색어 변경 시 페이지를 1로 리셋
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery])
+
+  // 전체 리스트(검색 적용, 기본은 인기순 정렬). 준비 단계에선 클라이언트 페이징.
   const filteredHorses = searchQuery
     ? mockHorses.filter(
         (horse) =>
           horse.hrName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           horse.hrNo.toLowerCase().includes(searchQuery.toLowerCase()),
       )
-    : [...mockHorses].sort((a, b) => b.popularity - a.popularity).slice(0, 5)
+    : [...mockHorses].sort((a, b) => b.popularity - a.popularity)
+
+  const totalCount = filteredHorses.length
+  const startIdx = (page - 1) * pageSize
+  const paginatedHorses = filteredHorses.slice(startIdx, startIdx + pageSize)
 
   const handleLogin = (email, password) => {
     if (email && password) {
@@ -240,13 +253,17 @@ export default function App() {
         <SearchSection searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
         <HorseGrid
-          horses={filteredHorses}
+          horses={paginatedHorses}
           favorites={favorites}
           isLoggedIn={isLoggedIn}
           notes={notes}
           onSelectHorse={setSelectedHorse}
           onToggleFavorite={toggleFavorite}
         />
+
+        {totalCount > pageSize && (
+          <Pagination page={page} pageSize={pageSize} total={totalCount} onPageChange={setPage} />)
+        }
 
         {selectedHorse && (
           <DetailModal

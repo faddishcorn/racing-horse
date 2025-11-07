@@ -1,6 +1,6 @@
 import { useState } from "react"
 import styled from "styled-components"
-import { Star, Sparkles } from "lucide-react"
+import { Star, Sparkles, X } from "lucide-react"
 
 const Overlay = styled.div`
   position: fixed;
@@ -55,6 +55,32 @@ const StarButton = styled.button`
     height: 1.5rem;
     color: ${(props) => (props.$favorite ? "var(--accent)" : "var(--muted-foreground)")};
     fill: ${(props) => (props.$favorite ? "var(--accent)" : "none")};
+  }
+`
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: var(--secondary);
+    color: var(--foreground);
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 `
 
@@ -336,11 +362,16 @@ export default function DetailModal({
             <Title>{horse.hrName}</Title>
             <Description>마번: {horse.hrNo}</Description>
           </div>
-          {isLoggedIn && (
-            <StarButton $favorite={favorites.includes(horse.hrNo)} onClick={() => onToggleFavorite(horse.hrNo)}>
-              <Star />
-            </StarButton>
-          )}
+          <HeaderActions>
+            {isLoggedIn && (
+              <StarButton $favorite={favorites.includes(horse.hrNo)} onClick={() => onToggleFavorite(horse.hrNo)}>
+                <Star />
+              </StarButton>
+            )}
+            <CloseButton aria-label="닫기" title="닫기" onClick={onClose}>
+              <X />
+            </CloseButton>
+          </HeaderActions>
         </ModalHeader>
 
         <ModalContent>
