@@ -9,6 +9,8 @@ import horseRouter from './routes/horses.js'
 import healthRouter from './routes/health.js'
 import userRouter from './routes/users.js'
 import commentRouter from './routes/comments.js'
+import aiRouter from './routes/ai.js'
+import authRouter from './routes/auth.js'
 
 const app = express()
 
@@ -21,8 +23,10 @@ app.use(express.json())
 // 라우트
 app.use('/api/health', healthRouter)
 app.use('/api/horses', horseRouter)
+app.use('/api/auth', authRouter)
 app.use('/api/users', userRouter)
 app.use('/api/comments', commentRouter)
+app.use('/api/ai', aiRouter)
 
 // 404 처리
 app.use((req, res) => {
