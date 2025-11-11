@@ -26,9 +26,6 @@ const horseSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// 색인: hrNo 고유, hrName 빠른 검색, updatedAt 최신순 정렬
-horseSchema.index({ hrNo: 1 }, { unique: true })
-horseSchema.index({ hrName: 1 })
 horseSchema.index({ updatedAt: -1 })
 
 // toJSON 변환: _id -> id, __v 제거
