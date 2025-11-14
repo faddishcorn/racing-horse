@@ -16,6 +16,7 @@ userSchema.set('toJSON', {
   transform: (_doc, ret) => {
     ret.id = ret._id
     delete ret._id
+    delete ret.passwordHash // 비밀번호 해시 노출 방지
     return ret
   },
 })
