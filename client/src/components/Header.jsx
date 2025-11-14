@@ -69,9 +69,12 @@ const Button = styled.button`
 export default function Header({ isLoggedIn, currentUser, onLogin, onLogout }) {
   const [showLoginDialog, setShowLoginDialog] = useState(false)
 
-  const handleLogin = (email, password) => {
-    onLogin(email, password)
-    setShowLoginDialog(false)
+  // 로그인 / 회원가입 모두 처리 (LoginDialog에서 세 번째 인자로 회원가입 여부 전달)
+  const handleLogin = async (email, password, isRegister = false) => {
+    const result = await onLogin(email, password, isRegister)
+    if (result?.success) {
+      setShowLoginDialog(false)
+    }
   }
 
   return (
@@ -100,7 +103,11 @@ export default function Header({ isLoggedIn, currentUser, onLogin, onLogout }) {
                 <LogIn size={16} />
                 로그인
               </Button>
-              <LoginDialog isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} onLogin={handleLogin} />
+              <LoginDialog
+                isOpen={showLoginDialog}
+                onClose={() => setShowLoginDialog(false)}
+                onLogin={handleLogin}
+              />
             </>
           )}
         </HeaderRight>
