@@ -8,13 +8,17 @@ export function normalizeListParams(query) {
   const hr_name = query.hr_name || query.hrName
   const hr_no = query.hr_no || query.hrNo
   const sort = query.sort
-  return { page, limit, hr_name, hr_no, sort }
+  const hasRecords = query.hasRecords === 'true' // 경주 기록 있는 말만 필터
+  return { page, limit, hr_name, hr_no, sort, hasRecords }
 }
 
-export function buildFilter({ hr_name, hr_no }) {
+export function buildFilter({ hr_name, hr_no, hasRecords }) {
   const filter = {}
   if (hr_no) filter.hrNo = hr_no
   if (hr_name) filter.hrName = { $regex: hr_name, $options: 'i' }
+  if (hasRecords) {
+    filter.rcCntT = { $gt: 0 } // 경주 기록이 1회 이상
+  }
   return filter
 }
 
@@ -26,8 +30,8 @@ export function buildSort(sort) {
 }
 
 export async function listHorses(params) {
-  const { page, limit, hr_name, hr_no, sort } = params
-  const filter = buildFilter({ hr_name, hr_no })
+  const { page, limit, hr_name, hr_no, sort, hasRecords } = params
+  const filter = buildFilter({ hr_name, hr_no, hasRecords })
   const skip = (page - 1) * limit
   const { sortOption, sort: sortValue } = buildSort(sort)
 
