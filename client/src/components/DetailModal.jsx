@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import styled from "styled-components"
 import { Star, Sparkles, X } from "lucide-react"
 
@@ -346,13 +346,47 @@ export default function DetailModal({
   isAnalyzing,
   onClose,
   onToggleFavorite,
-  onSaveNote,
+  onUpdateNote,
+  onPersistNote,
   onAddComment,
   onAnalyze,
 }) {
   const [activeTab, setActiveTab] = useState("info")
   const [newComment, setNewComment] = useState("")
   const horseComments = comments.filter((c) => c.hrNo === horse.hrNo)
+  const [noteDraft, setNoteDraft] = useState(notes[horse.hrNo] || "")
+  const [isNoteSaving, setIsNoteSaving] = useState(false)
+  const [noteStatus, setNoteStatus] = useState("") // '', 'changed', 'saved', 'error'
+
+  // 말 변경 시 초기 노트 로드 (notes 변경마다 status 초기화하지 않도록 horse.hrNo만 의존)
+  useEffect(() => {
+    setNoteDraft(notes[horse.hrNo] || "")
+    setNoteStatus("")
+  }, [horse.hrNo])
+
+  const handleNoteChange = (val) => {
+    setNoteDraft(val)
+    setNoteStatus("changed")
+    onUpdateNote(horse.hrNo, val)
+  }
+
+  const handlePersistNote = async () => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+    setIsNoteSaving(true)
+    setNoteStatus("")
+    try {
+      await onPersistNote(horse.hrNo, noteDraft)
+      setNoteStatus("saved")
+    } catch (e) {
+      console.error("Note save error", e)
+      setNoteStatus("error")
+    } finally {
+      setIsNoteSaving(false)
+    }
+  }
 
   return (
   <Overlay onClick={onClose}>
@@ -566,10 +600,26 @@ export default function DetailModal({
                 <NoteTextarea
                   id="note"
                   placeholder="이 말에 대한 개인 분석을 작성하세요..."
-                  value={notes[horse.hrNo] || ""}
-                  onChange={(e) => onSaveNote(horse.hrNo, e.target.value)}
+                  value={noteDraft}
+                  onChange={(e) => handleNoteChange(e.target.value)}
+                  disabled={isNoteSaving}
                 />
-                <NoteSaveMessage>노트는 자동으로 저장됩니다</NoteSaveMessage>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', flexWrap:'wrap' }}>
+                  <SubmitButton
+                    type="button"
+                    disabled={isNoteSaving || noteStatus !== 'changed'}
+                    onClick={handlePersistNote}
+                    style={{ padding: '0.5rem 0.75rem' }}
+                  >
+                    {isNoteSaving ? '저장 중...' : '저장'}
+                  </SubmitButton>
+                  <NoteSaveMessage>
+                    {noteStatus === '' && '수정 후 저장 버튼을 누르세요'}
+                    {noteStatus === 'changed' && '변경 사항 있음'}
+                    {noteStatus === 'saved' && '저장 완료'}
+                    {noteStatus === 'error' && '저장 실패 (다시 시도)'}
+                  </NoteSaveMessage>
+                </div>
               </CommentForm>
             </TabContent>
           )}
