@@ -82,26 +82,110 @@ const Button = styled.button`
   &:hover {
     opacity: 0.9;
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const SecondaryButton = styled(Button)`
+  background-color: var(--secondary);
+  color: var(--foreground);
+`
+
+const TabButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+`
+
+const TabButton = styled.button`
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: ${(props) => (props.$active ? "2px solid var(--primary)" : "none")};
+  color: ${(props) => (props.$active ? "var(--primary)" : "var(--muted-foreground)")};
+  font-weight: ${(props) => (props.$active ? "500" : "400")};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: var(--primary);
+  }
+`
+
+const ErrorMessage = styled.p`
+  color: var(--destructive);
+  font-size: 0.75rem;
+  margin-top: -0.5rem;
 `
 
 export default function LoginDialog({ isOpen, onClose, onLogin }) {
+  const [mode, setMode] = useState("login") // "login" or "register"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (email && password) {
-      onLogin(email, password)
-      setEmail("")
-      setPassword("")
+    setError("")
+
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 입력해주세요.")
+      return
+    }
+
+    if (password.length < 6) {
+      setError("비밀번호는 6자 이상이어야 합니다.")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const result = await onLogin(email, password, mode === "register")
+      if (result?.success) {
+        setEmail("")
+        setPassword("")
+        onClose()
+      }
+    } catch (err) {
+      setError(err.message || "오류가 발생했습니다.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const handleClose = () => {
+    setEmail("")
+    setPassword("")
+    setError("")
+    setMode("login")
+    onClose()
+  }
+
   return (
-    <Overlay $open={isOpen} onClick={onClose}>
+    <Overlay $open={isOpen} onClick={handleClose}>
       <DialogBox onClick={(e) => e.stopPropagation()}>
-        <DialogTitle>로그인</DialogTitle>
-        <DialogDescription>댓글, 관심마, 노트 기능을 사용하려면 로그인하세요</DialogDescription>
+        <TabButtons>
+          <TabButton $active={mode === "login"} onClick={() => setMode("login")}>
+            로그인
+          </TabButton>
+          <TabButton $active={mode === "register"} onClick={() => setMode("register")}>
+            회원가입
+          </TabButton>
+        </TabButtons>
+
+        <DialogTitle>{mode === "login" ? "로그인" : "회원가입"}</DialogTitle>
+        <DialogDescription>
+          {mode === "login"
+            ? "댓글, 관심마, 노트 기능을 사용하려면 로그인하세요"
+            : "새 계정을 만들어 모든 기능을 이용하세요"}
+        </DialogDescription>
+
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label htmlFor="email">이메일</Label>
@@ -111,19 +195,24 @@ export default function LoginDialog({ isOpen, onClose, onLogin }) {
               placeholder="email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
             />
           </FormGroup>
           <FormGroup>
-            <Label htmlFor="password">비밀번호</Label>
+            <Label htmlFor="password">비밀번호 (6자 이상)</Label>
             <Input
               id="password"
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
           </FormGroup>
-          <Button type="submit">로그인</Button>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "처리 중..." : mode === "login" ? "로그인" : "회원가입"}
+          </Button>
         </Form>
       </DialogBox>
     </Overlay>
