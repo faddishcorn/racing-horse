@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import helmet from 'helmet'
 import cors from 'cors'
 import morgan from 'morgan'
+import cookieParser from 'cookie-parser'
 
 import horseRouter from './routes/horses.js'
 import healthRouter from './routes/health.js'
@@ -16,9 +17,10 @@ const app = express()
 
 // 기본 미들웨어
 app.use(helmet())
-app.use(cors({ origin: ['http://localhost:5173'], credentials: false }))
+app.use(cors({ origin: ['http://localhost:5173'], credentials: true }))
 app.use(morgan('dev'))
 app.use(express.json())
+app.use(cookieParser())
 
 // 라우트
 app.use('/api/health', healthRouter)
