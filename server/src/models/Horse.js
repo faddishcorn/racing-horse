@@ -17,8 +17,8 @@ const horseSchema = new mongoose.Schema(
     recentOrd: { type: Number },
     recentRcDist: { type: Number },
     recentRating: { type: Number },
-    recentBudam: { type: Number },
-    chaksunT: { type: String },
+    recentBudam: { type: String }, // "핸디캡", "별정A" 등
+    chaksunT: { type: Number }, // 상금 (숫자)
     popularity: { type: Number, default: 0 },
     // 원본 API 응답 저장용
     raw: { type: mongoose.Schema.Types.Mixed },
