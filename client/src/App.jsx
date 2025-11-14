@@ -6,116 +6,14 @@ import HorseGrid from "./components/HorseGrid"
 import DetailModal from "./components/DetailModal"
 import FavoritesSection from "./components/FavoriteSection"
 import Pagination from "./components/Pagination"
-import { analyzeHorse } from "./utils/analysisService"
+import * as authAPI from "./api/authAPI"
+import * as horseAPI from "./api/horseAPI"
+import * as commentAPI from "./api/commentAPI"
+import * as aiAPI from "./api/aiAPI"
 
-const mockHorses = [
-  {
-    hrNo: "H001",
-    hrName: "썬더볼트",
-    meet: "서울",
-    age: "5",
-    sex: "수",
-    debut: "2020-03-15",
-    rcCntT: "45",
-    ord1CntT: "12",
-    ord2CntT: "8",
-    winRateT: "26.7",
-    qnlRateT: "44.4",
-    recentRcDate: "2025-01-15",
-    recentOrd: "1",
-    recentRcDist: "1800",
-    recentRating: "95",
-    recentBudam: "58",
-    chaksunT: "1-2-3",
-    popularity: 95,
-  },
-  {
-    hrNo: "H002",
-    hrName: "골든스타",
-    meet: "부산경남",
-    age: "4",
-    sex: "암",
-    debut: "2021-05-20",
-    rcCntT: "32",
-    ord1CntT: "10",
-    ord2CntT: "6",
-    winRateT: "31.3",
-    qnlRateT: "50.0",
-    recentRcDate: "2025-01-20",
-    recentOrd: "2",
-    recentRcDist: "1400",
-    recentRating: "92",
-    recentBudam: "56",
-    chaksunT: "2-1-1",
-    popularity: 88,
-  },
-  {
-    hrNo: "H003",
-    hrName: "스피드킹",
-    meet: "서울",
-    age: "6",
-    sex: "수",
-    debut: "2019-08-10",
-    rcCntT: "58",
-    ord1CntT: "15",
-    ord2CntT: "12",
-    winRateT: "25.9",
-    qnlRateT: "46.6",
-    recentRcDate: "2025-01-18",
-    recentOrd: "3",
-    recentRcDist: "2000",
-    recentRating: "90",
-    recentBudam: "60",
-    chaksunT: "3-2-1",
-    popularity: 82,
-  },
-  {
-    hrNo: "H004",
-    hrName: "블루윈드",
-    meet: "제주",
-    age: "3",
-    sex: "암",
-    debut: "2022-11-05",
-    rcCntT: "18",
-    ord1CntT: "5",
-    ord2CntT: "4",
-    winRateT: "27.8",
-    qnlRateT: "50.0",
-    recentRcDate: "2025-01-22",
-    recentOrd: "1",
-    recentRcDist: "1200",
-    recentRating: "88",
-    recentBudam: "54",
-    chaksunT: "1-1-2",
-    popularity: 75,
-  },
-  {
-    hrNo: "H005",
-    hrName: "다이아몬드",
-    meet: "서울",
-    age: "5",
-    sex: "수",
-    debut: "2020-07-12",
-    rcCntT: "42",
-    ord1CntT: "8",
-    ord2CntT: "10",
-    winRateT: "19.0",
-    qnlRateT: "42.9",
-    recentRcDate: "2025-01-10",
-    recentOrd: "4",
-    recentRcDist: "1600",
-    recentRating: "85",
-    recentBudam: "57",
-    chaksunT: "4-2-1",
-    popularity: 68,
-  },
-]
+// 말 데이터는 API에서 조회
 
-const mockComments = [
-  { id: 1, hrNo: "H001", user: "경마팬123", content: "최근 컨디션이 정말 좋아 보입니다!", date: "2025-01-25" },
-  { id: 2, hrNo: "H001", user: "말분석가", content: "장거리에서 강한 모습을 보여주네요", date: "2025-01-24" },
-  { id: 3, hrNo: "H002", user: "골든팬", content: "다음 경주가 기대됩니다", date: "2025-01-23" },
-]
+// 댓글은 선택된 말 기준으로 API에서 로드
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -132,31 +30,53 @@ const Main = styled.main`
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(8) // 첫 페이지 8마리 요구사항
+  const [horses, setHorses] = useState([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isHorseLoading, setIsHorseLoading] = useState(false)
+  const [horseError, setHorseError] = useState("")
   const [selectedHorse, setSelectedHorse] = useState(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentUser, setCurrentUser] = useState("")
   const [favorites, setFavorites] = useState([])
+  const [favoriteHorses, setFavoriteHorses] = useState([])
   const [notes, setNotes] = useState({})
-  const [comments, setComments] = useState(mockComments)
+  const [comments, setComments] = useState([])
+  const [commentPage, setCommentPage] = useState(1)
+  const [commentLimit] = useState(20)
+  const [isCommentLoading, setIsCommentLoading] = useState(false)
+  const [commentError, setCommentError] = useState("")
   const [aiAnalysis, setAiAnalysis] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiError, setAiError] = useState("")
 
+  // 페이지 로드 시 세션 상태 확인 (항상 200 응답)
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser")
-    const savedFavorites = localStorage.getItem("favorites")
-    const savedNotes = localStorage.getItem("notes")
+    const checkSession = async () => {
+      try {
+        const { authenticated, user } = await authAPI.getSession()
+        if (authenticated && user) {
+          setIsLoggedIn(true)
+          setCurrentUser(user.email)
+          setFavorites(user.favorites || [])
+          setNotes(user.notes || {})
+        } else {
+          setIsLoggedIn(false)
+          setCurrentUser("")
+          setFavorites([])
+          setNotes({})
+        }
+      } catch (_e) {
+        // 예외적으로 오류가 나더라도 비로그인으로 처리
+        setIsLoggedIn(false)
+        setCurrentUser("")
+        setFavorites([])
+        setNotes({})
+      }
+    }
 
-    if (savedUser) {
-      setIsLoggedIn(true)
-      setCurrentUser(savedUser)
-    }
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
-    }
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes))
-    }
+    checkSession()
   }, [])
 
   // 검색어 변경 시 페이지를 1로 리셋
@@ -164,84 +84,201 @@ export default function App() {
     setPage(1)
   }, [searchQuery])
 
-  // 전체 리스트(검색 적용, 기본은 인기순 정렬). 준비 단계에선 클라이언트 페이징.
-  const filteredHorses = searchQuery
-    ? mockHorses.filter(
-        (horse) =>
-          horse.hrName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          horse.hrNo.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : [...mockHorses].sort((a, b) => b.popularity - a.popularity)
+  // 말 데이터 서버에서 조회
+  useEffect(() => {
+    const fetchHorses = async () => {
+      setIsHorseLoading(true)
+      setHorseError("")
+      try {
+        const params = {
+          page,
+          limit: pageSize,
+          sort: 'popularity',
+          hasRecords: true,
+        }
+        if (searchQuery) {
+          params.hr_name = searchQuery
+        }
+        const data = await horseAPI.getHorses(params)
+        setHorses(data.items || [])
+        setTotalCount(data.total || 0)
+        setTotalPages(data.totalPages || 1)
+      } catch (e) {
+        console.error('Horse fetch error:', e)
+        setHorseError(e.response?.data?.error || '말 데이터를 불러오는 데 실패했습니다.')
+      } finally {
+        setIsHorseLoading(false)
+      }
+    }
+    fetchHorses()
+  }, [searchQuery, page, pageSize])
 
-  const totalCount = filteredHorses.length
-  const startIdx = (page - 1) * pageSize
-  const paginatedHorses = filteredHorses.slice(startIdx, startIdx + pageSize)
+  // 즐겨찾기 말 상세 별도 로드 (페이지/검색과 무관)
+  useEffect(() => {
+    const loadFavoriteHorses = async () => {
+      if (!isLoggedIn) {
+        setFavoriteHorses([])
+        return
+      }
+      if (!favorites || favorites.length === 0) {
+        setFavoriteHorses([])
+        return
+      }
+      try {
+        const results = await Promise.all(
+          favorites.map((hrNo) =>
+            horseAPI.getHorse(hrNo).catch(() => null)
+          )
+        )
+        const list = results.filter(Boolean)
+        // 즐겨찾기 순서 유지
+        const ordered = favorites
+          .map((hrNo) => list.find((h) => h.hrNo === hrNo))
+          .filter(Boolean)
+        setFavoriteHorses(ordered)
+      } catch (e) {
+        console.error('Favorite horses fetch error:', e)
+      }
+    }
+    loadFavoriteHorses()
+  }, [isLoggedIn, favorites])
 
-  const handleLogin = (email, password) => {
-    if (email && password) {
+  const handleLogin = async (email, password, isRegister = false) => {
+    try {
+      let data
+      if (isRegister) {
+        data = await authAPI.register(email, password)
+        alert("회원가입이 완료되었습니다!")
+      } else {
+        data = await authAPI.login(email, password)
+      }
+      
       setIsLoggedIn(true)
-      setCurrentUser(email)
-      localStorage.setItem("currentUser", email)
+      setCurrentUser(data.user.email)
+      setFavorites(data.user.favorites || [])
+      setNotes(data.user.notes || {})
+      return { success: true }
+    } catch (error) {
+      console.error(isRegister ? "Register error:" : "Login error:", error)
+      const errorMessage = error.response?.data?.error || (isRegister ? "회원가입에 실패했습니다." : "로그인에 실패했습니다.")
+      alert(errorMessage)
+      return { success: false, error }
     }
   }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false)
-    setCurrentUser("")
-    localStorage.removeItem("currentUser")
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout()
+      setIsLoggedIn(false)
+      setCurrentUser("")
+      setFavorites([])
+      setNotes({})
+    } catch (error) {
+      console.error("Logout error:", error)
+      // 로그아웃은 클라이언트에서도 처리
+      setIsLoggedIn(false)
+      setCurrentUser("")
+      setFavorites([])
+      setNotes({})
+    }
   }
 
-  const toggleFavorite = (hrNo) => {
-    const newFavorites = favorites.includes(hrNo) ? favorites.filter((f) => f !== hrNo) : [...favorites, hrNo]
-    setFavorites(newFavorites)
-    localStorage.setItem("favorites", JSON.stringify(newFavorites))
+  const toggleFavorite = async (hrNo) => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    try {
+      const data = await authAPI.toggleFavorite(hrNo)
+      setFavorites(data.favorites)
+    } catch (error) {
+      console.error("Toggle favorite error:", error)
+      alert("즐겨찾기 업데이트에 실패했습니다.")
+    }
   }
 
-  const saveNote = (hrNo, note) => {
-    const newNotes = { ...notes, [hrNo]: note }
-    setNotes(newNotes)
-    localStorage.setItem("notes", JSON.stringify(newNotes))
+  const saveNote = async (hrNo, note) => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    try {
+      const data = await authAPI.saveNote(hrNo, note)
+      setNotes(data.notes)
+    } catch (error) {
+      console.error("Save note error:", error)
+      alert("노트 저장에 실패했습니다.")
+    }
   }
 
-  const addComment = (content) => {
-    if (content && selectedHorse && isLoggedIn) {
-      const comment = {
-        id: comments.length + 1,
-        hrNo: selectedHorse.hrNo,
-        user: currentUser,
-        content: content,
-        date: new Date().toISOString().split("T")[0],
+  // 댓글 로드 (말 선택 시 또는 페이지 변경 시)
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!selectedHorse) return
+      setIsCommentLoading(true)
+      setCommentError("")
+      try {
+        const data = await commentAPI.getComments(selectedHorse.hrNo, commentPage, commentLimit)
+        // 서버는 items에 userEmail을 제공 → UI에서 user 필드 사용 위해 매핑
+        const mapped = (data.items || []).map(c => ({
+          id: c.id,
+            hrNo: c.hrNo,
+            user: c.userEmail,
+            content: c.content,
+            date: new Date(c.createdAt).toISOString().split('T')[0]
+        }))
+        setComments(mapped)
+      } catch (e) {
+        console.error('Comment fetch error:', e)
+        setCommentError(e.response?.data?.error || '댓글을 불러오는 데 실패했습니다.')
+      } finally {
+        setIsCommentLoading(false)
       }
-      setComments([...comments, comment])
+    }
+    fetchComments()
+  }, [selectedHorse, commentPage, commentLimit])
+
+  const addComment = async (content) => {
+    if (!content || !selectedHorse) return
+    if (!isLoggedIn) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    try {
+      const created = await commentAPI.postComment(selectedHorse.hrNo, currentUser, content)
+      const newComment = {
+        id: created.id,
+        hrNo: created.hrNo,
+        user: created.userEmail,
+        content: created.content,
+        date: new Date(created.createdAt).toISOString().split('T')[0]
+      }
+      setComments([newComment, ...comments])
+    } catch (e) {
+      console.error('Comment post error:', e)
+      alert(e.response?.data?.error || '댓글 작성 실패')
     }
   }
 
   const handleAIAnalysis = async () => {
     if (!selectedHorse) return
-
     setIsAnalyzing(true)
     setAiAnalysis("")
-
-    const result = await analyzeHorse({
-      hrName: selectedHorse.hrName,
-      age: selectedHorse.age,
-      sex: selectedHorse.sex,
-      rcCntT: selectedHorse.rcCntT,
-      ord1CntT: selectedHorse.ord1CntT,
-      winRateT: selectedHorse.winRateT,
-      qnlRateT: selectedHorse.qnlRateT,
-      recentOrd: selectedHorse.recentOrd,
-      recentRating: selectedHorse.recentRating,
-      recentBudam: selectedHorse.recentBudam,
-      chaksunT: selectedHorse.chaksunT,
-    })
-
-    setIsAnalyzing(false)
-
-    if (result.success) {
-      setAiAnalysis(result.analysis)
-    } else {
-      setAiAnalysis("분석 중 오류가 발생했습니다. 다시 시도해주세요.")
+    setAiError("")
+    try {
+      const result = await aiAPI.analyzeHorse(selectedHorse.hrNo)
+      if (result.success) {
+        setAiAnalysis(result.analysis)
+      } else {
+        setAiError(result.error || '분석 실패')
+      }
+    } catch (e) {
+      console.error('AI analyze error:', e)
+      setAiError(e.response?.data?.error || 'AI 분석 호출 실패')
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -252,18 +289,22 @@ export default function App() {
       <Main>
         <SearchSection searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <HorseGrid
-          horses={paginatedHorses}
-          favorites={favorites}
-          isLoggedIn={isLoggedIn}
-          notes={notes}
-          onSelectHorse={setSelectedHorse}
-          onToggleFavorite={toggleFavorite}
-        />
+        {horseError && <p style={{ color: 'var(--destructive)' }}>{horseError}</p>}
+        {isHorseLoading && <p style={{ color: 'var(--muted-foreground)' }}>불러오는 중...</p>}
+        {!isHorseLoading && !horseError && (
+          <HorseGrid
+            horses={horses}
+            favorites={favorites}
+            isLoggedIn={isLoggedIn}
+            notes={notes}
+            onSelectHorse={setSelectedHorse}
+            onToggleFavorite={toggleFavorite}
+          />
+        )}
 
         {totalCount > pageSize && (
-          <Pagination page={page} pageSize={pageSize} total={totalCount} onPageChange={setPage} />)
-        }
+          <Pagination page={page} pageSize={pageSize} total={totalCount} onPageChange={setPage} />
+        )}
 
         {selectedHorse && (
           <DetailModal
@@ -277,16 +318,23 @@ export default function App() {
             onClose={() => {
               setSelectedHorse(null)
               setAiAnalysis("")
+              setAiError("")
             }}
             onToggleFavorite={toggleFavorite}
-            onSaveNote={saveNote}
+            onUpdateNote={(hrNo, content) => {
+              // 로컬 메모만 갱신 (API 호출 없음)
+              setNotes(prev => ({ ...prev, [hrNo]: content }))
+            }}
+            onPersistNote={async (hrNo, content) => {
+              await saveNote(hrNo, content) // 기존 API 호출 재사용
+            }}
             onAddComment={addComment}
             onAnalyze={handleAIAnalysis}
           />
         )}
 
         {isLoggedIn && favorites.length > 0 && (
-          <FavoritesSection horses={mockHorses} favorites={favorites} notes={notes} onSelectHorse={setSelectedHorse} />
+          <FavoritesSection horses={favoriteHorses} favorites={favorites} notes={notes} onSelectHorse={setSelectedHorse} />
         )}
       </Main>
     </AppContainer>
