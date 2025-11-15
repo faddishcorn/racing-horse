@@ -25,12 +25,19 @@ const envOrigins = (process.env.CORS_ORIGINS || '')
   .filter(Boolean)
 const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins
 
+// 디버깅용
+console.log('🔒 CORS allowed origins:', allowedOrigins)
+
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
     // 비브라우저/서버 간 통신(예: 서버 헬스체크)에서는 origin이 없을 수 있음
     if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS allowed: ${origin}`)
+      return callback(null, true)
+    }
+    console.warn(`❌ CORS blocked: ${origin} (allowed: ${allowedOrigins.join(', ')})`)
     return callback(new Error(`Not allowed by CORS: ${origin}`))
   },
 }
