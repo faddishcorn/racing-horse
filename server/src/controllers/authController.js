@@ -16,7 +16,7 @@ export async function register(req, res, next) {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송 (프로덕션)
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     })
     
@@ -38,7 +38,7 @@ export async function login(req, res, next) {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     })
     
@@ -54,7 +54,7 @@ export async function logout(req, res, next) {
     res.clearCookie('token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     })
     res.json({ message: 'Logged out successfully' })
   } catch (e) {
@@ -76,7 +76,7 @@ export async function session(req, res, next) {
         res.clearCookie('token', {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         })
         return res.json({ authenticated: false })
       }
@@ -86,7 +86,7 @@ export async function session(req, res, next) {
       res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       })
       return res.json({ authenticated: false })
     }
