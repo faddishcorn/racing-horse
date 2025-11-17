@@ -1,12 +1,8 @@
 {
   "rewrites": [
-    { 
-      "source": "/api/:path*", 
-      "destination": "$BACKEND_API_URL/:path*" 
-    }, 
     {
-      "source": "/:path((?!.*\\.).*)", 
-      "destination": "/index.html"
+      "source": "/api/(.*)",
+      "destination": "https://racing-horse.onrender.com/api/$1"
     }
   ]
 }
