@@ -320,6 +320,78 @@ const CommentContent = styled.p`
   color: var(--foreground);
 `
 
+const DeleteButton = styled.button`
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  border: 1px solid var(--destructive);
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--destructive);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+  &:hover {
+    background: var(--destructive);
+    color: #fff;
+  }
+`
+
+const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`
+
+const ConfirmModal = styled.div`
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 20rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+`
+
+const ConfirmTitle = styled.h3`
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+`
+
+const ConfirmActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+`
+
+const ConfirmBtn = styled.button`
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: var(--accent); color: var(--accent-foreground); }
+  &[data-variant='destructive'] {
+    border-color: var(--destructive);
+    background: rgba(220,38,38,0.08);
+    color: var(--destructive);
+  }
+  &[data-variant='destructive']:hover {
+    background: var(--destructive);
+    color: #fff;
+  }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+`
+
 const EmptyMessage = styled.div`
   text-align: center;
   color: var(--muted-foreground);
@@ -340,6 +412,7 @@ export default function DetailModal({
   horse,
   favorites,
   isLoggedIn,
+  currentUser,
   notes,
   comments,
   aiAnalysis,
@@ -349,6 +422,7 @@ export default function DetailModal({
   onUpdateNote,
   onPersistNote,
   onAddComment,
+  onDeleteComment,
   onAnalyze,
 }) {
   const [activeTab, setActiveTab] = useState("info")
@@ -357,6 +431,15 @@ export default function DetailModal({
   const [noteDraft, setNoteDraft] = useState(notes[horse.hrNo] || "")
   const [isNoteSaving, setIsNoteSaving] = useState(false)
   const [noteStatus, setNoteStatus] = useState("") // '', 'changed', 'saved', 'error'
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  function maskEmail(email) {
+    if (!email || !email.includes('@')) return email || ''
+    const [local, domain] = email.split('@')
+    if (local.length <= 2) return local[0] + '*@' + domain
+    return local[0] + '***' + local.slice(-1) + '@' + domain
+  }
 
   // 말 변경 시 초기 노트 로드 (notes 변경마다 status 초기화하지 않도록 horse.hrNo만 의존)
   useEffect(() => {
@@ -576,9 +659,17 @@ export default function DetailModal({
                             >
                               {comment.user[0]}
                             </div>
-                            <strong>{comment.user}</strong>
+                            <strong>{maskEmail(comment.user)}</strong>
                           </CommentUser>
-                          <CommentDate>{comment.date}</CommentDate>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <CommentDate>{comment.date}</CommentDate>
+                            {isLoggedIn && currentUser === comment.user && (
+                              <DeleteButton
+                                title="댓글 삭제"
+                                onClick={() => setPendingDeleteId(comment.id)}
+                              >삭제</DeleteButton>
+                            )}
+                          </div>
                         </CommentMeta>
                         <CommentContent>{comment.content}</CommentContent>
                       </CommentCard>
@@ -625,6 +716,34 @@ export default function DetailModal({
           )}
         </ModalContent>
       </Modal>
+      {pendingDeleteId && (
+        <ConfirmOverlay onClick={() => !isDeleting && setPendingDeleteId(null)}>
+          <ConfirmModal onClick={(e) => e.stopPropagation()}>
+            <ConfirmTitle>댓글을 삭제하시겠어요?</ConfirmTitle>
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', lineHeight: 1.4 }}>
+              삭제 후 복구할 수 없습니다. 신중히 진행해주세요.
+            </p>
+            <ConfirmActions>
+              <ConfirmBtn disabled={isDeleting} onClick={() => setPendingDeleteId(null)}>취소</ConfirmBtn>
+              <ConfirmBtn
+                data-variant='destructive'
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true)
+                  try {
+                    await onDeleteComment(pendingDeleteId)
+                    setPendingDeleteId(null)
+                  } catch (_) {
+                    // 상위에서 alert 처리
+                  } finally {
+                    setIsDeleting(false)
+                  }
+                }}
+              >{isDeleting ? '삭제 중...' : '삭제'}</ConfirmBtn>
+            </ConfirmActions>
+          </ConfirmModal>
+        </ConfirmOverlay>
+      )}
     </Overlay>
   )
 }

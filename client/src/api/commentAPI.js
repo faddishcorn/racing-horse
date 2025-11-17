@@ -13,3 +13,9 @@ export const postComment = async (hrNo, userEmail, content) => {
   const { data } = await api.post("/comments", { hrNo, userEmail, content })
   return data
 }
+
+// 댓글 삭제
+export const deleteComment = async (id) => {
+  const { data } = await api.delete(`/comments/${id}`)
+  return data
+}

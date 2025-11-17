@@ -15,3 +15,13 @@ export async function createComment({ hrNo, userEmail, content }) {
   const created = await Comment.create({ hrNo, userEmail, content })
   return created
 }
+
+export async function removeCommentOwned(id, userEmail) {
+  const found = await Comment.findById(id)
+  if (!found) return { deleted: false }
+  if (String(found.userEmail).toLowerCase() !== String(userEmail).toLowerCase()) {
+    return { deleted: false }
+  }
+  await Comment.deleteOne({ _id: id })
+  return { deleted: true }
+}

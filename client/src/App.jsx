@@ -311,6 +311,7 @@ export default function App() {
             horse={selectedHorse}
             favorites={favorites}
             isLoggedIn={isLoggedIn}
+            currentUser={currentUser}
             notes={notes}
             comments={comments}
             aiAnalysis={aiAnalysis}
@@ -329,6 +330,15 @@ export default function App() {
               await saveNote(hrNo, content) // 기존 API 호출 재사용
             }}
             onAddComment={addComment}
+            onDeleteComment={async (id) => {
+              try {
+                await commentAPI.deleteComment(id)
+                setComments(prev => prev.filter(c => c.id !== id))
+              } catch (e) {
+                console.error('Comment delete error:', e)
+                alert(e.response?.data?.error || '댓글 삭제 실패')
+              }
+            }}
             onAnalyze={handleAIAnalysis}
           />
         )}
