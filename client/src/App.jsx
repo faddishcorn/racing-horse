@@ -10,6 +10,7 @@ import * as authAPI from "./api/authAPI"
 import * as horseAPI from "./api/horseAPI"
 import * as commentAPI from "./api/commentAPI"
 import * as aiAPI from "./api/aiAPI"
+import runningHorse from "./assets/runningHorse.gif"
 
 // 말 데이터는 API에서 조회
 
@@ -290,7 +291,12 @@ export default function App() {
         <SearchSection searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
         {horseError && <p style={{ color: 'var(--destructive)' }}>{horseError}</p>}
-        {isHorseLoading && <p style={{ color: 'var(--muted-foreground)' }}>불러오는 중...</p>}
+        {isHorseLoading && (
+            <div style={{ textAlign: 'center', padding: '60px 20px', gap: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img src={runningHorse} alt="로딩 중..." style={{ width: '200px' }} />
+                <p style={{ color: 'var(--muted-foreground)' }}>불러오는 중...</p>
+            </div>
+        )}
         {!isHorseLoading && !horseError && (
           <HorseGrid
             horses={horses}
