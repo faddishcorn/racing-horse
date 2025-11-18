@@ -1,0 +1,45 @@
+name: Seed Horse Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 매일 KST 06:00 (UTC 21:00)
+    - cron: '0 21 * * *'
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency: seed-job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run seed script
+        working-directory: server
+        env:
+          NODE_ENV: production
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          SEED_START_PAGE: ${{ secrets.SEED_START_PAGE || '1' }}
+          SEED_END_PAGE: ${{ secrets.SEED_END_PAGE || '41' }}
+          SEED_DELAY_MS: ${{ secrets.SEED_DELAY_MS || '300' }}
+        run: npm run seed
+
+      - name: Summary
+        if: always()
+        run: |
+          echo 'Seed job completed (status may be success or failure).'

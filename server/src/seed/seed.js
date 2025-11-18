@@ -84,8 +84,10 @@ async function run() {
     console.log('MongoDB connected')
 
     const allHorses = []
-    const startPage = 1
-    const endPage = 41 // totalCount 4055 / 100 = ~41페이지
+    // 동적 페이지 범위 및 딜레이 (환경변수로 조정 가능)
+    const startPage = parseInt(process.env.SEED_START_PAGE || '1', 10)
+    const endPage = parseInt(process.env.SEED_END_PAGE || '41', 10) // totalCount 4055 / 100 = ~41페이지 기본값
+    const delayMs = parseInt(process.env.SEED_DELAY_MS || '300', 10)
     
     console.log(`Fetching all pages (${startPage} to ${endPage})...`)
 
@@ -111,8 +113,8 @@ async function run() {
       allHorses.push(...horses)
 
       // API 부하 방지 딜레이
-      if (page < endPage) {
-        await new Promise((resolve) => setTimeout(resolve, 300))
+      if (page < endPage && delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
       }
     }
 
