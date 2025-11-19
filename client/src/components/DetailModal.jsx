@@ -618,8 +618,8 @@ export default function DetailModal({
           </TabContent>
 
           <TabContent $active={activeTab === "comments"}>
-            {isLoggedIn ? (
-              <CommentSection>
+            <CommentSection>
+              {isLoggedIn ? (
                 <CommentForm>
                   <Label htmlFor="comment">댓글 작성</Label>
                   <Textarea
@@ -638,50 +638,52 @@ export default function DetailModal({
                     댓글 등록
                   </SubmitButton>
                 </CommentForm>
+              ) : (
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  로그인하면 댓글을 작성할 수 있어요.
+                </p>
+              )}
 
-                <CommentsList>
-                  {horseComments.length > 0 ? (
-                    horseComments.map((comment) => (
-                      <CommentCard key={comment.id}>
-                        <CommentMeta>
-                          <CommentUser>
-                            <div
-                              style={{
-                                width: "1.5rem",
-                                height: "1.5rem",
-                                borderRadius: "50%",
-                                backgroundColor: "var(--secondary)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              {comment.user[0]}
-                            </div>
-                            <strong>{maskEmail(comment.user)}</strong>
-                          </CommentUser>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <CommentDate>{comment.date}</CommentDate>
-                            {isLoggedIn && currentUser === comment.user && (
-                              <DeleteButton
-                                title="댓글 삭제"
-                                onClick={() => setPendingDeleteId(comment.id)}
-                              >삭제</DeleteButton>
-                            )}
+              <CommentsList>
+                {horseComments.length > 0 ? (
+                  horseComments.map((comment) => (
+                    <CommentCard key={comment.id}>
+                      <CommentMeta>
+                        <CommentUser>
+                          <div
+                            style={{
+                              width: "1.5rem",
+                              height: "1.5rem",
+                              borderRadius: "50%",
+                              backgroundColor: "var(--secondary)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "0.75rem",
+                            }}
+                          >
+                            {comment.user[0]}
                           </div>
-                        </CommentMeta>
-                        <CommentContent>{comment.content}</CommentContent>
-                      </CommentCard>
-                    ))
-                  ) : (
-                    <EmptyMessage>아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</EmptyMessage>
-                  )}
-                </CommentsList>
-              </CommentSection>
-            ) : (
-              <EmptyMessage>댓글을 작성하려면 로그인이 필요합니다</EmptyMessage>
-            )}
+                          <strong>{maskEmail(comment.user)}</strong>
+                        </CommentUser>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <CommentDate>{comment.date}</CommentDate>
+                          {isLoggedIn && currentUser === comment.user && (
+                            <DeleteButton
+                              title="댓글 삭제"
+                              onClick={() => setPendingDeleteId(comment.id)}
+                            >삭제</DeleteButton>
+                          )}
+                        </div>
+                      </CommentMeta>
+                      <CommentContent>{comment.content}</CommentContent>
+                    </CommentCard>
+                  ))
+                ) : (
+                  <EmptyMessage>아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</EmptyMessage>
+                )}
+              </CommentsList>
+            </CommentSection>
           </TabContent>
 
           {isLoggedIn && (
