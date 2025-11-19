@@ -9,6 +9,7 @@ on:
 jobs:
   seed:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
     concurrency: seed-job
