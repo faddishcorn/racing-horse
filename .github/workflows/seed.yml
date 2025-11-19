@@ -32,7 +32,6 @@ jobs:
             --type ipAddress \
             --comment "GitHub Action Runner" \
             --projectId ${{ secrets.ATLAS_GROUP_ID }} \
-            --force
 
       - name: Setup Node
         uses: actions/setup-node@v4
