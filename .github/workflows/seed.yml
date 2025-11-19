@@ -13,6 +13,13 @@ jobs:
     permissions:
       contents: read
     concurrency: seed-job
+
+    env:
+      MONGODB_ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+      MONGODB_ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+      MONGODB_ATLAS_ORG_ID: ${{ secrets.ATLAS_ORG_ID }}
+      MONGODB_ATLAS_PROJECT_ID: ${{ secrets.ATLAS_GROUP_ID }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +30,9 @@ jobs:
       - name: Setup MongoDB Atlas CLI
         uses: mongodb/atlas-github-action@v0.2.0
 
+      - name: Verify Atlas Auth
+        run: atlas auth whoami
+      
       - name: Add IP to Access List
         env:
           MONGODB_ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
@@ -31,7 +41,6 @@ jobs:
           atlas accessLists create ${{ env.RUNNER_IP }} \
             --type ipAddress \
             --comment "GitHub Action Runner" \
-            --projectId ${{ secrets.ATLAS_GROUP_ID }} \
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -58,12 +67,8 @@ jobs:
 
       - name: Remove IP from Access List
         if: always()
-        env:
-          MONGODB_ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
-          MONGODB_ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
         run: |
           atlas accessLists delete ${{ env.RUNNER_IP }} \
-            --projectId ${{ secrets.ATLAS_GROUP_ID }} \
             --force
 
       - name: Summary
