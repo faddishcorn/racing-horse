@@ -86,7 +86,6 @@ async function start() {
     }
     app.listen(PORT, HOST, () => {
       const env = process.env.NODE_ENV || 'development'
-      console.log(`Server listening on ${HOST}:${PORT} (env: ${env})`)
     })
   } catch (e) {
     console.error('Startup error:', e)
