@@ -17,6 +17,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get Runner IP
+        run: echo "RUNNER_IP=$(curl -s https://api.ipify.org)" >> $GITHUB_ENV
+
+      - name: Setup MongoDB Atlas CLI
+        uses: mongodb/atlas-github-action@v0.2.0
+
+      - name: Add IP to Access List
+        env:
+          MONGODB_ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          MONGODB_ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+        run: |
+          atlas accessLists create ${{ env.RUNNER_IP }} \
+            --type ipAddress \
+            --comment "GitHub Action Runner" \
+            --projectId ${{ secrets.ATLAS_GROUP_ID }} \
+            --force
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -39,6 +56,16 @@ jobs:
           SEED_END_PAGE: ${{ secrets.SEED_END_PAGE || '41' }}
           SEED_DELAY_MS: ${{ secrets.SEED_DELAY_MS || '300' }}
         run: npm run seed
+
+      - name: Remove IP from Access List
+        if: always()
+        env:
+          MONGODB_ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          MONGODB_ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+        run: |
+          atlas accessLists delete ${{ env.RUNNER_IP }} \
+            --projectId ${{ secrets.ATLAS_GROUP_ID }} \
+            --force
 
       - name: Summary
         if: always()
