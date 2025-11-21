@@ -5,6 +5,7 @@ const Wrapper = styled.section`
   max-width: 720px;
   margin: 0 auto 2rem;
   text-align: center;
+  animation: fadeIn 0.6s ease-out forwards;
 `
 
 const SearchBox = styled.div`
@@ -35,14 +36,15 @@ const Input = styled.input`
 
   &:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(85,115,202,.15);
+    box-shadow: 0 0 0 3px var(--primary-shadow), 0 0 0 1px var(--primary);
   }
 `
 
 const Hint = styled.p`
-  margin-top: .5rem;
-  font-size: .875rem;
+  margin-top: .75rem;
+  font-size: .95rem; 
   color: var(--muted-foreground);
+  animation: fadeIn 0.8s ease-out forwards;
 `
 
 export default function SearchSection({ searchQuery, onSearchChange }) {

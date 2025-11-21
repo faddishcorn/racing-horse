@@ -1,17 +1,16 @@
 import { useState } from "react"
+import { createPortal } from 'react-dom'
 import styled from "styled-components"
 
 const Overlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: ${(props) => (props.$open ? "flex" : "none")};
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 5000;
+  backdrop-filter: blur(2px);
 `
 
 const DialogBox = styled.div`
@@ -167,8 +166,10 @@ export default function LoginDialog({ isOpen, onClose, onLogin }) {
     onClose()
   }
 
-  return (
-    <Overlay $open={isOpen} onClick={handleClose}>
+  if (!isOpen) return null
+
+  return createPortal(
+    <Overlay onClick={handleClose}>
       <DialogBox onClick={(e) => e.stopPropagation()}>
         <TabButtons>
           <TabButton $active={mode === "login"} onClick={() => setMode("login")}>
@@ -215,6 +216,7 @@ export default function LoginDialog({ isOpen, onClose, onLogin }) {
           </Button>
         </Form>
       </DialogBox>
-    </Overlay>
+    </Overlay>,
+    document.body
   )
 }

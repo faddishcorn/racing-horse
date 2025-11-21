@@ -5,26 +5,39 @@ const Bar = styled.div`
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin: 1rem 0 2rem;
+  margin: 2rem 0; 
+  animation: fadeIn 0.8s ease-out forwards;
 `
 
 const Button = styled.button`
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1.1rem; 
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--foreground);
   border-radius: 0.5rem;
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: background 0.2s, opacity 0.2s;
+  font-size: 0.9rem; 
+  transition: all 0.2s ease; 
 
   &:hover:not(:disabled) {
-    background: var(--secondary);
+    background: var(--primary); 
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+    background: var(--primary-shadow);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6; /* More visible disabled state */
     cursor: not-allowed;
+    background: var(--secondary);
+    color: var(--muted-foreground);
   }
 `
 

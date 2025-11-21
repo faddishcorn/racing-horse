@@ -6,7 +6,8 @@ import LoginDialog from "./LoginDialog"
 const HeaderWrapper = styled.header`
   border-bottom: 1px solid var(--border);
   background-color: var(--card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.5s ease-out forwards;
 `
 
 const HeaderContent = styled.div`
@@ -27,6 +28,7 @@ const Logo = styled.div`
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--foreground);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   }
 `
 
@@ -59,10 +61,27 @@ const Button = styled.button`
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
 
   &:hover {
     background-color: var(--secondary);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+    background-color: var(--secondary);
+  }
+
+  @media (max-width: 480px) {
+    span {
+      display: none;
+    }
+    padding: 0.5rem;
   }
 `
 
@@ -98,20 +117,18 @@ export default function Header({ isLoggedIn, currentUser, onLogin, onLogout }) {
               </Button>
             </>
           ) : (
-            <>
-              <Button onClick={() => setShowLoginDialog(true)}>
-                <LogIn size={16} />
-                로그인
-              </Button>
-              <LoginDialog
-                isOpen={showLoginDialog}
-                onClose={() => setShowLoginDialog(false)}
-                onLogin={handleLogin}
-              />
-            </>
+            <Button onClick={() => setShowLoginDialog(true)}>
+              <LogIn size={16} />
+              로그인
+            </Button>
           )}
         </HeaderRight>
       </HeaderContent>
+      <LoginDialog
+        isOpen={showLoginDialog}
+        onClose={() => setShowLoginDialog(false)}
+        onLogin={handleLogin}
+      />
     </HeaderWrapper>
   )
 }

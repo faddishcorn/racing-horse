@@ -6,23 +6,27 @@ const GridContainer = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  animation: fadeIn 0.7s ease-out forwards;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    padding: 0 1rem; 
   }
 `
 
 const Card = styled.div`
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem; 
   background-color: var(--card);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
 
   &:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); 
+    transform: translateY(-5px); 
   }
 `
 
@@ -49,10 +53,21 @@ const StarButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 0.25rem; 
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+  border-radius: 50%; 
+
+  &:hover {
+    transform: scale(1.2); 
+    color: var(--accent); 
+  }
+
+  &:active {
+    transform: scale(0.9); 
+  }
 
   svg {
     width: 1.25rem;
@@ -89,12 +104,14 @@ const Value = styled.span`
 
 const Badge = styled.span`
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.25rem;
+  padding: 0.3rem 0.8rem; 
+  border-radius: 0.35rem; 
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600; /* Bolder font weight */
+  letter-spacing: 0.02em; /* Slight letter spacing */
   background-color: ${(props) => (props.$primary ? "var(--primary)" : "var(--secondary)")};
   color: ${(props) => (props.$primary ? "var(--primary-foreground)" : "var(--foreground)")};
+  box-shadow: ${(props) => (props.$primary ? "0 2px 4px rgba(var(--primary-rgb), 0.2)" : "none")};
 `
 
 export default function HorseGrid({ horses, favorites, isLoggedIn, notes, onSelectHorse, onToggleFavorite }) {
