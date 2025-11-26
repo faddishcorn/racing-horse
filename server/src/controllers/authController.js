@@ -1,7 +1,7 @@
 import { registerUser, loginUser, validatePassword } from '../services/authService.js'
 import { signToken } from '../middleware/auth.js'
 import jwt from 'jsonwebtoken'
-import { getUserByEmail } from '../services/userService.js'
+import { getUserByEmail, getUserFavorites, getUserNotes } from '../services/userService.js'
 
 export async function register(req, res, next) {
   try {
@@ -11,7 +11,7 @@ export async function register(req, res, next) {
     const result = await registerUser(email, password)
     if (result.error) return res.status(409).json({ error: result.error })
     const token = signToken({ email: result.user.email, id: result.user.id })
-    
+
     // HTTP-only 쿠키로 토큰 설정
     res.cookie('token', token, {
       httpOnly: true,
@@ -19,8 +19,12 @@ export async function register(req, res, next) {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     })
-    
-    res.status(201).json({ user: result.user })
+
+    const userObj = result.user.toJSON()
+    userObj.favorites = [] // 신규 가입이므로 빈 배열
+    userObj.notes = {} // 신규 가입이므로 빈 객체
+
+    res.status(201).json({ user: userObj })
   } catch (e) {
     next(e)
   }
@@ -33,7 +37,7 @@ export async function login(req, res, next) {
     const result = await loginUser(email, password)
     if (result.error) return res.status(401).json({ error: result.error })
     const token = signToken({ email: result.user.email, id: result.user.id })
-    
+
     // HTTP-only 쿠키로 토큰 설정
     res.cookie('token', token, {
       httpOnly: true,
@@ -41,8 +45,12 @@ export async function login(req, res, next) {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     })
-    
-    res.json({ user: result.user })
+
+    const userObj = result.user.toJSON()
+    userObj.favorites = await getUserFavorites(result.user._id)
+    userObj.notes = await getUserNotes(result.user._id)
+
+    res.json({ user: userObj })
   } catch (e) {
     next(e)
   }
@@ -80,7 +88,11 @@ export async function session(req, res, next) {
         })
         return res.json({ authenticated: false })
       }
-      return res.json({ authenticated: true, user })
+      const userObj = user.toJSON()
+      userObj.favorites = await getUserFavorites(user._id)
+      userObj.notes = await getUserNotes(user._id)
+
+      return res.json({ authenticated: true, user: userObj })
     } catch (_err) {
       // 토큰 검증 실패 시 쿠키 정리 후 비인증 상태 반환
       res.clearCookie('token', {

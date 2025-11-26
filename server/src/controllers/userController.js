@@ -1,4 +1,4 @@
-import { upsertUserEmail, getUserByEmail, toggleFavorite, saveNote } from '../services/userService.js'
+import { upsertUserEmail, getUserByEmail, toggleFavorite, saveNote, getUserFavorites, getUserNotes } from '../services/userService.js'
 
 export async function registerUpsert(req, res, next) {
   try {
@@ -16,7 +16,12 @@ export async function me(req, res, next) {
     const email = req.user?.email
     const user = await getUserByEmail(email)
     if (!user) return res.status(404).json({ error: 'Not Found' })
-    res.json(user)
+
+    const userObj = user.toJSON()
+    userObj.favorites = await getUserFavorites(user._id)
+    userObj.notes = await getUserNotes(user._id)
+
+    res.json(userObj)
   } catch (e) {
     next(e)
   }
