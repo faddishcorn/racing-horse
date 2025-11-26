@@ -109,20 +109,6 @@ server/
       commentService.js # 댓글 도메인 비즈니스 로직
     routes/
       health.js         # /api/health
-      horses.js         # /api/horses -> controllers.horseController 위임
-      users.js          # /api/users -> controllers.userController 위임
-      comments.js       # /api/comments -> controllers.commentController 위임
-      auth.js           # /api/auth -> controllers.authController 위임
-      ai.js             # /api/ai -> controllers.aiController 위임
-    models/
-      Horse.js          # 말 스키마
-      User.js           # 사용자 스키마(email,favorites,notes)
-      Comment.js        # 댓글 스키마(hrNo,userEmail,content)
-    seed/
-      seed.js           # 샘플 데이터 주입 스크립트
-```
-
-## CORS
 - 기본 허용: http://localhost:5173
 - 필요 시 `src/index.js`의 cors 옵션에서 도메인 추가/변경
 
